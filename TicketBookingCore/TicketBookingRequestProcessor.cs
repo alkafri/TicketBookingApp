@@ -14,6 +14,13 @@ public class TicketBookingRequestProcessor
     {
         if (request is null) throw new ArgumentNullException(nameof(request));
 
+        // --- Validate Email ---
+        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains("@"))
+        {
+            throw new ArgumentException("Invalid email address");
+        }
+        // -------------------------------------
+
         // Create save entity
         var ticketBooking = new TicketBooking
         {
