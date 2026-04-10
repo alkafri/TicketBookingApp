@@ -19,15 +19,23 @@ public class TicketBookingRequestProcessorTests
     }
 
     [Fact]
-    public void ShouldSaveToDatabase()
+    public void ShouldReturnErrorForInvalidEmail()
     {
-        // Arrange
-        var request = new TicketBookingRequest { FirstName = "Ahmed", Email = "ahmed@test.com" };
+        // Arrange: Prepare wrong data
+        var request = new TicketBookingRequest
+        {
+            FirstName = "Ahmed",
+            LastName = "Alkafri",
+            Email = "ahmed.hotmail.com"
+        };
 
-        // Act
-        _processor.Book(request);
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => _processor.Book(request));
 
-        // Assert
-        _repositoryMock.Verify(x => x.Save(It.IsAny<TicketBooking>()), Times.Once);
+        // Confirm error message
+        Assert.Equal("Invalid email address", exception.Message);
+
+        // make sure nothing save on DB
+        _repositoryMock.Verify(x => x.Save(It.IsAny<TicketBooking>()), Times.Never);
     }
 }
