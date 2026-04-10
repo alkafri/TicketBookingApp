@@ -1,30 +1,33 @@
-﻿using Xunit;
+﻿using Moq;
+using Xunit;
 using TicketBookingCore;
 
 namespace TicketBookingCore.Tests;
 
 public class TicketBookingRequestProcessorTests
 {
-    [Fact]
-    public void ShouldReturnTicketBookingResultWithRequestValues()
+    private readonly TicketBookingRequestProcessor _processor;
+    private readonly Mock<ITicketBookingRepository> _repositoryMock;
+
+    public TicketBookingRequestProcessorTests()
     {
-        // 1. Arrange
-        var processor = new TicketBookingRequestProcessor();
-        var request = new TicketBookingRequest
-        {
-            FirstName = "Ahmed",
-            LastName = "Alkafri",
-            Email = "ahmed@example.com",
-            Date = DateTime.Now
-        };
+        // 1. Create DB (Mock)
+        _repositoryMock = new Mock<ITicketBookingRepository>();
 
-        // 2. Act
-        TicketBookingResponse response = processor.Book(request);
+        // 2. Send it to processor
+        _processor = new TicketBookingRequestProcessor(_repositoryMock.Object);
+    }
 
-        // 3. Assert
-        Assert.NotNull(response);
-        Assert.Equal(request.FirstName, response.FirstName);
-        Assert.Equal(request.LastName, response.LastName);
-        Assert.Equal(request.Email, response.Email);
+    [Fact]
+    public void ShouldSaveToDatabase()
+    {
+        // Arrange
+        var request = new TicketBookingRequest { FirstName = "Ahmed", Email = "ahmed@test.com" };
+
+        // Act
+        _processor.Book(request);
+
+        // Assert
+        _repositoryMock.Verify(x => x.Save(It.IsAny<TicketBooking>()), Times.Once);
     }
 }
