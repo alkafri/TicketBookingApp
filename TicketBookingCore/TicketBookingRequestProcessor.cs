@@ -4,7 +4,6 @@ public class TicketBookingRequestProcessor
 {
     private readonly ITicketBookingRepository _ticketBookingRepository;
 
-    // Constructor: tell the processor not to work without DB
     public TicketBookingRequestProcessor(ITicketBookingRepository ticketBookingRepository)
     {
         _ticketBookingRepository = ticketBookingRepository;
@@ -14,26 +13,28 @@ public class TicketBookingRequestProcessor
     {
         if (request is null) throw new ArgumentNullException(nameof(request));
 
-        // --- Validate Email ---
-        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains("@"))
+        // Use function for validation
+        if (!IsValidEmail(request.Email))
         {
             throw new ArgumentException("Invalid email address");
         }
-        // -------------------------------------
 
-        // Create save entity
-        var ticketBooking = new TicketBooking
-        {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            Date = request.Date
-        };
-
-        // Save in DB (moq)
+        var ticketBooking = Create<TicketBooking>(request);
         _ticketBookingRepository.Save(ticketBooking);
 
-        return new TicketBookingResponse
+        return Create<TicketBookingResponse>(request);
+    }
+
+    // Validation function
+    private bool IsValidEmail(string email)
+    {
+        return !string.IsNullOrWhiteSpace(email) && email.Contains("@");
+    }
+
+    // Refactor
+    private static T Create<T>(TicketBookingRequest request) where T : TicketBookingBase, new()
+    {
+        return new T
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
